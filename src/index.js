@@ -6,8 +6,6 @@ import {
   Scene,
   Mesh,
   MeshLambertMaterial,
-  MeshBasicMaterial,
-  BoxGeometry,
   PlaneGeometry,
   PointLight,
   TextureLoader,
@@ -41,9 +39,9 @@ class MainScene {
   bindFuncs() {
     this.animate = this.animate.bind(this);
     this.buildGeom = this.buildGeom.bind(this);
-    this.buildBox = this.buildBox.bind(this);
     this.buildTerrain = this.buildTerrain.bind(this);
     this.buildLight = this.buildLight.bind(this);
+    this.addButton = this.addButton.bind(this);
   }
 
   buildGeom() {
@@ -54,7 +52,6 @@ class MainScene {
   buildLight() {
     const light = new PointLight(0xffffff, 5, 100);
     light.position.set(0, 0, 10);
-    // const light = new AmbientLight(0x404040);
     this.scene.add(light);
   }
 
@@ -78,13 +75,6 @@ class MainScene {
     this.scene.add(this.terrain);
   }
 
-  buildBox() {
-    const geometry = new BoxGeometry(1, 1, 1);
-    const material = new MeshBasicMaterial({ color: 0x0000ff });
-    this.cube = new Mesh(geometry, material);
-    this.scene.add(this.cube);
-  }
-
   animate() {
     this.noise.forEach((noiseVal, index) => {
       const planeIndex = Math.floor((index + this.offset) % this.terrain.geometry.vertices.length);
@@ -97,7 +87,12 @@ class MainScene {
     requestAnimationFrame(this.animate);
 
     if (!this.vrMode) {
+      const size = this.renderer.getSize();
+      this.renderer.setScissorTest(true);
+      this.renderer.setScissor(0, 0, size.width, size.height);
+      this.renderer.setViewport(0, 0, size.width, size.height);
       this.renderer.render(this.scene, this.camera);
+      this.renderer.setScissorTest(false);
     } else {
       this.scene.updateMatrixWorld();
       if (this.camera.parent === null) this.camera.updateMatrixWorld();
@@ -118,8 +113,23 @@ class MainScene {
       this.renderer.setScissorTest(false);
     }
   }
+
+  addButton() {
+    const button = document.createElement('button');
+    button.innerHTML = 'Toggle VR';
+
+    const body = document.getElementsByTagName('body')[0];
+    body.appendChild(button);
+
+    button.style = 'z-index: 1; position: absolute; bottom: 0; right: 0;';
+
+    button.addEventListener('click', () => {
+      this.vrMode = !this.vrMode;
+    });
+  }
 }
 
 const msObj = new MainScene();
+msObj.addButton();
 msObj.buildGeom();
 msObj.animate();
